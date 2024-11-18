@@ -1,60 +1,65 @@
-import {GraphQLFormattedError} from 'graphql'
+import { GraphQLFormattedError } from 'graphql'; // Importing the GraphQL error type
 
 type Error = {
-    message: string;
-    statusCode: string;
-}
-//wraps around fetch and add auth header
+    message: string; // Error message to describe what went wrong
+    statusCode: string; // Status code for the error
+};
+
+// Wraps around the fetch function to add authentication headers
 const customFetch = async (url: string, options: RequestInit) => {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token"); // Retrieve the access token from local storage
 
-    const headers = options.headers as Record<string, string>
+    // Cast the headers to a record of string keys and values
+    const headers = options.headers as Record<string, string>;
 
+    // Perform the fetch request with additional headers
     return await fetch(
         url,
         {
-            ...options,
+            ...options, // Keep the original options
             headers: {
-                ...headers,
-                Authorization: headers?.Authorization || `Bearer ${token}`,
-                "Content-Type": "application/json",
-                //openg graph frontend client Apollo - helps with cors
+                ...headers, // Merge existing headers
+                Authorization: headers?.Authorization || `Bearer ${token}`, // Add Authorization header if not already present
+                "Content-Type": "application/json", // Ensure the content type is JSON
+                // Apollo client setting to handle CORS-related preflight
                 "Apollo-Require-Preflight": "true"
             }
         }
-    )
-}
+    );
+};
 
-//error handler
+// Error handler to extract GraphQL errors from the response
 export const getGraphQLErrors = (body: Record<'errors', GraphQLFormattedError[] | undefined>): Error | null => {
     if (!body) {
+        // If the body is undefined, return a generic internal server error
         return {
             message: "Unknown error occurred",
             statusCode: 'INTERNAL_SERVER_ERROR'
-        }
+        };
     }
 
     if ("errors" in body) {
-        const errors = body?.errors
-        const messages = errors?.map(error => error?.message)?.join('')
-        const code = errors?.[0]?.extensions?.code
+        const errors = body?.errors; // Extract errors array if it exists in the body
+        const messages = errors?.map(error => error?.message)?.join(''); // Combine all error messages into one string
+        const code = errors?.[0]?.extensions?.code; // Get the error code from the first error in the array
 
+        // Return the formatted error object
         return {
-            message: messages || JSON.stringify(errors),
-            statusCode: code || '500'
-        }
+            message: messages || JSON.stringify(errors), // Use messages if available or stringify the errors
+            statusCode: code || '500' // Default to status code 500 if not provided
+        };
     }
-}
-//custom wrapper/middleware with auth and error handling
-export const fetchWrapper = async (url: string, options: RequestInit) => {
-    const response = await customFetch(url, options)
-    //cannot read response 2x , need to clone
-    const responseClone = response.clone()
-    const body = await responseClone.json()
+};
 
-    const error = getGraphQLErrors(body)
+// Custom wrapper/middleware for fetch with authentication and error handling
+export const fetchWrapper = async (url: string, options: RequestInit) => {
+    const response = await customFetch(url, options); // Make a request using customFetch with authentication
+    const responseClone = response.clone(); // Clone the response since it can only be read once
+    const body = await responseClone.json(); // Parse the response body to JSON
+
+    const error = getGraphQLErrors(body); // Check for GraphQL errors in the response
     if (error) {
-        throw error
+        throw error; // Throw an error if any are found
     }
-    return response
-}
+    return response; // Return the original response if no errors are found
+};

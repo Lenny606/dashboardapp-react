@@ -5,7 +5,7 @@ import {fetchWrapper} from "./fetchWrapper";
 
 // Define the base URL and API endpoints
 export const BASE_URL = 'https://api.crm.refine.dev'; // Base URL for the CRM API
-export const API_URL = 'https://api.crm.refine.dev'; // API endpoint for GraphQL client
+export const API_URL = `${BASE_URL}/graphql`; // API endpoint for GraphQL client
 export const WS_URL = 'wss://api.crm.refine.dev/graphql'; // WebSocket URL for live updates
 
 // Create an instance of GraphQLClient for making API requests

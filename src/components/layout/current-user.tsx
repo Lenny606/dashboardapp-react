@@ -5,6 +5,7 @@ import type {User} from '@/graphql/schema.types';
 import {useGetIdentity} from "@refinedev/core";
 import {useState} from "react";
 import {SettingOutlined} from "@ant-design/icons";
+import {AccountSettings} from "@/components/account-settings";
 
 export const CurrentUser = () => {
     const [isOpen, setIsOpen] = useState(false)
@@ -52,7 +53,7 @@ export const CurrentUser = () => {
         {/*    SETTINGS IF USER IS LOGGED  */}
             {
                 user && (
-                    <AccountSettings />
+                    <AccountSettings  opened={isOpen} userId={user.id} setOpened={setIsOpen}/>
                 )
             }
         </>
